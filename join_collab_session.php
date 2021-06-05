@@ -58,12 +58,18 @@ if (is_the_user_participating_in_any_session()) {
 		$ejsapp_name = get_ejsapp_name($master_user);
 		$session = get_collaborative_session_id($master_user);
 		if ($i == 1) {
-            echo html_writer::nonempty_tag('input checked', get_user_name($master_user) . get_string('invitationMsg1', 'block_ejsapp_collab_session')
+            //DMF-I
+		    //echo html_writer::nonempty_tag('input checked', get_user_name($master_user) . get_string('invitationMsg1', 'block_ejsapp_collab_session')
+            echo html_writer::nonempty_tag('input checked', get_user_name($master_user) . " " . get_string('invitationMsg1', 'block_ejsapp_collab_session')
                 . "$ejsapp_name", array('type'=>'radio', 'name'=>'colsession', 'value'=>$session));
+		    //DMF-F
             echo html_writer::tag('br', '');
 		} else {
-            echo html_writer::nonempty_tag('input', get_user_name($master_user) . get_string('invitationMsg1', 'block_ejsapp_collab_session')
+		    //DMF-I
+            //echo html_writer::nonempty_tag('input', get_user_name($master_user) . get_string('invitationMsg1', 'block_ejsapp_collab_session')
+            echo html_writer::nonempty_tag('input', get_user_name($master_user) ." ". get_string('invitationMsg1', 'block_ejsapp_collab_session')
                 . "$ejsapp_name", array('type'=>'radio', 'name'=>'colsession', 'value'=>$session));
+            //DMF-F
             echo html_writer::tag('br', '');
 		}
 		$i++;

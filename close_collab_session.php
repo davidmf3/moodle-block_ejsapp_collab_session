@@ -63,7 +63,10 @@ $course_url = $CFG->wwwroot . "/course/view.php?id=$course_id";
 
 if (am_i_master_user()) {
 	delete_collaborative_session($USER->id);
-	echo html_writer::tag('div', get_string('close1', 'block_ejsapp_collab_session')."{$ejsapp->name}".get_string('close2', 'block_ejsapp_collab_session'));
+	//DMF-I
+	//echo html_writer::tag('div', get_string('close1', 'block_ejsapp_collab_session')."{$ejsapp->name}".get_string('close2', 'block_ejsapp_collab_session'));
+    echo html_writer::tag('div', get_string('close1', 'block_ejsapp_collab_session')."{$ejsapp->name}"." ".get_string('close2', 'block_ejsapp_collab_session'));
+    //DMF-F
 } else {
 	delete_me_as_collaborative_user();
 	echo html_writer::tag('div', get_string('goodbyeStudent', 'block_ejsapp_collab_session'));

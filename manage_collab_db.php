@@ -83,6 +83,7 @@ function insert_collaborative_session($localport, $ejsapp, $master_user, $ip, $e
     $collab_session->ejsapp = $ejsapp;
     $collab_session->master_user = $master_user;
     $collab_session->course = $course;
+    $collab_session->creationtime = strtotime(date('Y-m-d H:i:s'));
     $DB->insert_record('ejsapp_collab_sessions', $collab_session);
 } //insert_collaborative_session
 
@@ -297,22 +298,54 @@ function delete_non_master_user_from_collaborative_users(){
  */
 function get_available_collab_lab_records($collaborative_lab_records) {
 	global $DB;
-	require_once('../../mod/ejsapp/locallib.php');
+	//DMF-I
+    // require_once('../../mod/ejsapp/locallib.php');
+    if (strpos(getcwd(),'collab')>0){
+        require_once('../../mod/ejsapp/locallib.php');
+    } else{
+        require_once('../mod/ejsapp/locallib.php');
+    }
+    //DMF-F
+
 
 	$available_collaborative_lab_records = array();
 	foreach ($collaborative_lab_records as $collaborative_lab_record) {
-		if ($collaborative_lab_record->is_rem_lab == 0) $available_collaborative_lab_records[] =  $collaborative_lab_record;
-		else {
+	    //DMF-I
+		//if ($collaborative_lab_record->is_rem_lab == 0) $available_collaborative_lab_records[] =  $collaborative_lab_record;
+        //else {
+        if ($collaborative_lab_record->is_rem_lab == 1){
+		//DMF-F
 			$course = $DB->get_record('course', array('id' => $collaborative_lab_record->course), '*', MUST_EXIST);
+
+			//DMF-I
+            $sql = "SELECT b.id, b.name
+                      FROM  {ejsappbooking} b 
+                     WHERE b.course = :courseid";
+            $params = [
+                'courseid'  => $collaborative_lab_record->course
+            ];
+
+            $book_records = $DB->get_records_sql($sql, $params);
+            //DMF-F
 			$remote_lab_access = remote_lab_access_info($collaborative_lab_record, $course);
 			$remlab_conf = $remote_lab_access->remlab_conf;
 			if ($remote_lab_access->allow_free_access && $remote_lab_access->operative) {
 				if ($remlab_conf->usestate == 'available') {
-				    $available_collaborative_lab_records[] =  $collaborative_lab_record;
-                }
+				    //DMF-IF
+                    //$available_collaborative_lab_records[] = $collaborative_lab_record;
+				    if ($remlab_conf->free_access = 0 || ($remlab_conf->free_access = 1 && count($book_records)>0)) {
+                        $available_collaborative_lab_records[] = $collaborative_lab_record;
+                    }
+				    //DMF-F
+				}
 			} else {
 				if ($remote_lab_access->operative) { // TODO: more checks needed
-					$available_collaborative_lab_records[] =  $collaborative_lab_record;
+                    //DMF-IF
+                    //$available_collaborative_lab_records[] =  $collaborative_lab_record;
+                    if ($remlab_conf->free_access = 0 || ($remlab_conf->free_access = 1 && count($book_records)>0)) {
+                        $available_collaborative_lab_records[] = $collaborative_lab_record;
+                    }
+                    //DMF-F
 				}
 			}
 		}
@@ -320,6 +353,7 @@ function get_available_collab_lab_records($collaborative_lab_records) {
 
 	return $available_collaborative_lab_records;
 } //get_available_collab_lab_records
+
 
 /**
  * returns the connection port that the session director is using in the collaborative session
@@ -358,3 +392,50 @@ function am_i_master_user(){
 
 	return (isset($record->master_user));
 } //am_i_master_user
+
+
+//DMF-I
+function create_event($labid, $practid, $starttime, $endtime, $slot_size, $usuario) {
+    global $DB, $USER, $CFG;
+
+    require_once($CFG->dirroot . '/calendar/lib.php');
+    require_once($CFG->dirroot . '/mod/ejsappbooking/lib.php');
+    require_once($CFG->dirroot . '/mod/ejsappbooking/ejsappbooking_model.class.php');
+
+
+    if( $usuario->timezone == '99'){
+         $user_timezone = new DateTimeZone(date_default_timezone_get());
+    } else {
+        $user_timezone = new DateTimeZone($usuario->timezone);
+    }
+
+    // Booking information - Event.
+    $inittime = DateTime::createFromFormat('Y-m-d H:i:s', $starttime, $user_timezone);
+    $finishtime = DateTime::createFromFormat('Y-m-d H:i:s', $endtime, $user_timezone);
+
+    $lab = $DB->get_record('ejsapp', array('id' => $labid));
+    $prac = $DB->get_record('block_remlab_manager_exp2prc', array('practiceid' => $practid, 'ejsappid' => $labid));
+
+
+    $event = new stdClass();
+    if(isset($prac->praticeintro)) {
+        $event->name = get_string('book_message', 'ejsappbooking') . ' ' . $lab->name . '. ' . $prac->practiceintro;
+    }else{
+        $event->name = get_string('book_message', 'ejsappbooking') . ' ' . $lab->name . '.';
+    }
+    $event->description = get_string('bookinginfo', 'ejsappbooking') . '<br><br>';
+    $event->groupid = 0;
+    $event->courseid = 0;
+    $event->userid = $usuario->id;
+    $event->eventtype = 'user';
+    $event->timestart = make_timestamp($inittime->format('Y'), $inittime->format('m'),
+        $inittime->format('d'), $inittime->format('H'), $inittime->format('i'));
+    $event->timeduration = $slot_size*60;
+
+    // Create the event on the calendar.
+    calendar_event::create($event);
+}
+//DMF-F
+
+
+

@@ -73,6 +73,13 @@ class block_ejsapp_collab_session extends block_list {
         $lab_records = $DB->get_records('ejsapp', array('course'=>$courseid));
         if (count($lab_records) == 0) {
             return $this->content;
+        //DMF-I
+        } else {
+            $lab_records = get_available_collab_lab_records($lab_records);
+            if (count($lab_records) == 0) {
+                return $this->content;
+            }
+            //DMF-F
         }
 
         $this->content = new stdClass();
@@ -118,7 +125,7 @@ class block_ejsapp_collab_session extends block_list {
             $content = $OUTPUT->single_button(new moodle_url('/blocks/ejsapp_collab_session/close_collab_session.php', array('session'=>$session_id,'courseid'=>$courseid,'contextid'=>$currentcontext->id)), $close_button, 'get');
             $this->content->items[2] = html_writer::div($content, 'collab_button');
     	} else {
-    		$master_user_url = new moodle_url('/blocks/ejsapp_collab_session/invite_participants.php', array('courseid'=>$courseid,'contextid'=>$currentcontext->id));
+            $master_user_url = new moodle_url('/blocks/ejsapp_collab_session/invite_participants.php', array('courseid' => $courseid, 'contextid' => $currentcontext->id));
             $content = $OUTPUT->single_button($master_user_url, get_string('createBut', 'block_ejsapp_collab_session'), 'get');
             $this->content->items[1] = html_writer::div($content, 'collab_button');
             if (has_the_user_been_invited_to_any_session()) {
