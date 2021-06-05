@@ -43,6 +43,7 @@ global $CFG, $DB, $PAGE, $OUTPUT, $USER, $SESSION;
 require_once($CFG->dirroot.'/message/lib.php');
 require_once($CFG->dirroot.'/filter/multilang/filter.php');
 require_once('manage_collab_db.php');
+require_once($CFG->dirroot . '/mod/ejsappbooking/controllers/add_booking_external.php');
 
 $mycourseid = required_param('courseid', PARAM_RAW);
 $contextid = required_param('contextid', PARAM_RAW);
@@ -51,13 +52,63 @@ $localport = required_param('localport', PARAM_RAW);
 $ip = required_param('ip', PARAM_RAW);
 $enlargeport = required_param('enlargeport', PARAM_RAW);
 $enlarge_collab_conf = required_param('enlarge_collab_conf', PARAM_RAW);
+//DMF-I
+$bookingid = required_param('bookingid', PARAM_RAW);
+//DMF-F
 
 $context = context::instance_by_id($contextid);
+
+//DMF-I
+$noParticipants=true;
+foreach ($_POST as $k => $v) {
+    if (preg_match('/^(user|teacher)(\d+)$/',$k,$m)) {
+        echo $m[2];
+        $noParticipants=false;
+    }
+}
+
+if ($noParticipants){
+	header('Location: '.$CFG->wwwroot.'/blocks/ejsapp_collab_session/invite_participants.php?courseid='.$mycourseid.'&contextid='.$contextid.'&noparticipants=0');
+	die();
+}
+//DMF-F
 
 // Create the collaborative session
 insert_collaborative_session($localport, $labid, $USER->id, $ip, $enlargeport, $enlarge_collab_conf, $mycourseid);
 
 $collaborative_session_id = get_collaborative_session_id($USER->id);
+
+//DMF-I
+//Create the calendar event for creator
+$practiceintro =  $DB->get_field('block_remlab_manager_exp2prc', 'practiceintro', array('ejsappid' => $labid));
+$practiceid = $DB->get_field('block_remlab_manager_exp2prc', 'practiceid', array('ejsappid' => $labid));
+
+$server_tz = new DateTimeZone(date_default_timezone_get());
+$sdate = new DateTime();
+$edate = new DateTime();
+
+$sdate->setTimeZone($server_tz);
+$edate->setTimeZone($server_tz);
+
+$starttime=$sdate->format("Y-m-d H:i:s");
+$endtime = $edate->format("Y-m-d H:i:s");
+
+$slots_duration = $DB->get_field('block_remlab_manager_conf', 'slotsduration', array('practiceintro' => $practiceintro));
+$durations = array( "0" => 60, "1"=>30, "2"=>15, "3"=>5, "4"=>2 );
+$slot_size = $durations[$slots_duration];
+
+$date = date_format($sdate, 'Y-m-d');
+$sdate->modify("+1 minute");
+$time = date_format($sdate, "H:i");
+
+if ($bookingid != 0) {
+    $booking = new add_booking_external_controller($bookingid);
+    $exit = $booking->do(array('labid' => $labid, 'practid' => $practiceid, 'date' => $date, 'time' => $time, 'user_bk' => $USER));
+    $booking->dispatch($exit);
+}
+
+create_event($labid, $practiceintro, $starttime, $endtime, $slot_size, $USER);
+//DMF-F
 
 $send = true;
 $preview = false;
@@ -99,6 +150,18 @@ foreach ($_POST as $k => $v) {
         }
     }
 }
+
+//DMF-I
+//Create the calendar event for participants
+for ($i = 0; $i < count($SESSION->emailto[$mycourseid]); $i++) {
+    if ($bookingid != 0) {
+        $booking = new add_booking_external_controller($bookingid);
+        $exit = $booking->do(array('labid' => $labid, 'practid' => $practiceid, 'date' => $date, 'time' => $time, 'user_bk' => $user_list[$i]));
+        $booking->dispatch($exit);
+    }
+    create_event($labid, $practiceintro, $starttime, $endtime, $slot_size, $user_list[$i]);
+}
+//DMF-F
 
 require('init_page.php');
 
