@@ -66,6 +66,11 @@ $string['cantJoinSessionErr1'] = 'Error: You are already participating in a coll
 $string['inviteParticipants'] = 'Invite participants';
 $string['navBarShowParticipants'] = 'Selecting participants';
 $string['selectLabBut'] = 'Select a laboratory';
+//DMF-I
+$string['selectGroupBut'] = 'Select a group';
+$string['selectBookingBut'] = 'Select a booking';
+$string['noParticipantsErr'] = 'Error: You must select a participant';
+//DMF-F
 
 //generate_embedding_code.php and many others:
 $string['pageTitle'] = 'Lab Collaborative Session';
