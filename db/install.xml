@@ -20,7 +20,9 @@
                 <FIELD NAME="ejsapp" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false"
                        COMMENT="id of the ejsapp activity to be used in the collab session" PREVIOUS="course" NEXT="master_user"/>
                 <FIELD NAME="master_user" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false"
-                       COMMENT="id of the user in moodle that acts as director of this collab session" PREVIOUS="ejsapp"/>
+                       COMMENT="id of the user in moodle that acts as director of this collab session" PREVIOUS="ejsapp" NEXT="creationtime"/>
+                <FIELD NAME="creationtime" TYPE="int" LENGTH="20" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"
+                       PREVIOUS="master_user"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
