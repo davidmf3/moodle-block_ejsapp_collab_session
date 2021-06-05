@@ -66,6 +66,11 @@ $string['cantJoinSessionErr1'] = 'Error: Ya tiene una sesi&oacute;n colaborativa
 $string['inviteParticipants'] = 'Invitar participantes';
 $string['navBarShowParticipants'] = 'Selecionando invitados';
 $string['selectLabBut'] = 'Seleccione un laboratorio';
+//DMF-I
+$string['selectGroupBut'] = 'Seleccione un grupo';
+$string['selectBookingBut'] = 'Seleccione una reserva';
+$string['noParticipantsErr'] = 'Error: Debe seleccionar algún participante';
+//DMF-F
 
 //generate_embedding_code.php and many others:
 $string['pageTitle']='Sesi&oacute;n Colaborativa de Laboratorio';
